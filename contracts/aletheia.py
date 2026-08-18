@@ -307,3 +307,47 @@ JSON output structure:
             "clashes": int(self.arena_clashes[arena_id]),
             "progression": progression,
         }
+
+    @gl.public.view
+    def get_arenas(self, start: u256) -> list:
+        """
+        Returns a paged list of active debate arenas, newest first.
+        """
+        out = []
+        n = len(self.arena_ids)
+        idx = n - 1 - int(start)
+        while idx >= 0 and len(out) < 20:
+            arena_id = self.arena_ids[idx]
+            out.append(self.get_arena(arena_id))
+            idx -= 1
+        return out
+
+    @gl.public.view
+    def get_ledger(self, start: u256) -> list:
+        """
+        Returns a paged list of debate history logs in reverse chronological order (newest first).
+        """
+        n = len(self.ledger)
+        if n == 0:
+            return []
+            
+        # Reconstruct events in chronological order (newest first)
+        ordered_events = []
+        if self.total_debates > u256(MAX_LOG_SIZE):
+            write_idx = int(self.total_debates) % MAX_LOG_SIZE
+            # From write_idx - 1 down to 0, then from MAX_LOG_SIZE - 1 down to write_idx
+            for i in range(write_idx - 1, -1, -1):
+                ordered_events.append(json.loads(self.ledger[i]))
+            for i in range(MAX_LOG_SIZE - 1, write_idx - 1, -1):
+                ordered_events.append(json.loads(self.ledger[i]))
+        else:
+            for i in range(n - 1, -1, -1):
+                ordered_events.append(json.loads(self.ledger[i]))
+                
+        # Return page of size 20
+        out = []
+        idx = int(start)
+        while idx < len(ordered_events) and len(out) < 20:
+            out.append(ordered_events[idx])
+            idx += 1
+        return out
