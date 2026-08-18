@@ -11,48 +11,36 @@ Aletheia is a decentralized dispute and debate terminal where users challenge cl
 Below is the architectural flow of Aletheia, showing how claims and evidence are processed and verified:
 
 ```mermaid
-graph TD
-    subgraph UserAction ["The Challenge Arena"]
-        Challenger["Contender - Counter Claim and Evidence URL"]
-        Incumbent["Proponent - Thesis Claim and Evidence URL"]
+flowchart TD
+    subgraph Arena ["The Dragon Coliseum"]
+        Topic["Topic: Claim and Evidence Link"]
+        Contender["Challenger: Counter Claim and Evidence Link"]
     end
 
-    subgraph OnChainVM ["Aletheia GenVM Intelligent Contract"]
-        Crawler["Web Crawler - gl.nondet.web.get"]
+    subgraph GenLayer ["GenLayer VM Execution"]
+        Crawler["Web Crawler: Fetching Evidence Text"]
         Arbiter["Dragon Arbiter LLM Adjudicator"]
-        Store["State Storage - Optimized TreeMap Mappings"]
     end
 
-    subgraph ConsensusJury ["Decentralized Validator Jury"]
-        Leader["Consensus Leader Node"]
-        Validators["Honest Validator Nodes"]
+    subgraph Consensus ["Validator Consensus Jury"]
+        Leader["Leader Node: Coordinates Evaluation"]
+        Validators["Validators: Verify and Agree on Block"]
     end
 
-    Challenger -->|Submit clash_thesis| Leader
-    Incumbent -->|Stored thesis| Leader
+    subgraph Storage ["On-Chain Registry"]
+        TreeMap["Storage: Rotate Proponent or Defend Thesis"]
+        Queue["Circular Buffer Log Queue"]
+    end
 
-    Leader -->|1. Triggers Web Fetching| Crawler
-    Crawler -->|2. Pulls live evidence page text| Arbiter
-    
-    Arbiter -->|3. Rules on categorical verdict and tight margin| Leader
-    Leader -->|4. Proposes block and outputs| Validators
-    
-    Validators -->|5. Re-fetches web data and executes evaluation| Validators
-    Validators -->|6. Check verdict match and margin delta within 12 points| Leader
-    
-    Leader -->|7. Writes result to state on consensus| Store
-    Store -->|If Overthrown: Rotate Thesis Proponent| Store
-    Store -->|Prune logs using O(1) circular queue| Store
-
-    classDef challenger fill:#2d1a1a,stroke:#b91c1c,stroke-width:2px,color:#fca5a5;
-    classDef incumbent fill:#1e293b,stroke:#0ea5e9,stroke-width:2px,color:#bae6fd;
-    classDef validator fill:#1a2d1a,stroke:#16a34a,stroke-width:2px,color:#bbf7d0;
-    classDef contract fill:#2e1f47,stroke:#8b5cf6,stroke-width:2px,color:#ddd6fe;
-
-    class Challenger challenger;
-    class Incumbent incumbent;
-    class Crawler,Arbiter,Store contract;
-    class Leader,Validators validator;
+    Topic -->|Submit Clash| Leader
+    Contender -->|Submit Clash| Leader
+    Leader -->|Fetch URLs| Crawler
+    Crawler -->|Adjudicate facts| Arbiter
+    Arbiter -->|Categorical Verdict| Leader
+    Leader -->|Propose block| Validators
+    Validators -->|Verify and reach consensus| Storage
+    Storage -->|If Overthrown| TreeMap
+    Storage -->|Prune Event Logs| Queue
 ```
 
 ---
