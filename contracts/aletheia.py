@@ -16,3 +16,35 @@ MAX_EVIDENCE_LENGTH = 3000  # truncate webpage content to fit LLM window constra
 MAX_HISTORY_LENGTH = 30     # number of generational thesis updates retained
 MAX_LOG_SIZE = 150          # circular log limit
 MARGIN_TOLERANCE = 12       # consensus threshold for LLM margin variance
+
+
+class Aletheia(gl.Contract):
+    """
+    Aletheia is a decentralized, evidence-grounded debate arena on GenLayer.
+    Unlike subjective debate forums, every claim must be backed by a web evidence URL,
+    which is resolved on-chain via GenLayer's non-deterministic web fetching.
+    """
+    owner: Address
+    arena_topics: TreeMap[str, str]           # arena_id -> topic string
+    arena_proponents: TreeMap[str, Address]    # arena_id -> current proponent Address
+    arena_claims: TreeMap[str, str]           # arena_id -> current thesis claim string
+    arena_evidence: TreeMap[str, str]         # arena_id -> current evidence URL
+    arena_defenses: TreeMap[str, u256]        # arena_id -> count of successful defenses
+    arena_clashes: TreeMap[str, u256]         # arena_id -> total duels run
+    arena_founders: TreeMap[str, Address]     # arena_id -> founder Address
+    arena_stages: TreeMap[str, u256]          # arena_id -> generation stage (progression index)
+    
+    # Store progression history in a key-value format: "arenaId_stageIndex" -> JSON representation
+    arena_history: TreeMap[str, str]
+    
+    arena_ids: DynArray[str]
+    ledger: DynArray[str]                     # append-only debate logs
+    seq: u256
+    total_debates: u256
+    total_overthrows: u256
+
+    def __init__(self):
+        self.owner = gl.message.sender_address
+        self.seq = u256(0)
+        self.total_debates = u256(0)
+        self.total_overthrows = u256(0)
