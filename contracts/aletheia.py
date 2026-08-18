@@ -266,3 +266,44 @@ JSON output structure:
             self.ledger.append(payload)
         else:
             self.ledger[index] = payload
+
+    # ------------------------------------------------------------- views
+
+    @gl.public.view
+    def get_stats(self) -> dict:
+        """
+        Returns global coliseum stats across all debate arenas.
+        """
+        return {
+            "arenas": len(self.arena_ids),
+            "debates": int(self.total_debates),
+            "overthrows": int(self.total_overthrows),
+        }
+
+    @gl.public.view
+    def get_arena(self, arena_id: str) -> dict:
+        """
+        Returns the current state and generation progression details of a specific arena.
+        """
+        if arena_id not in self.arena_topics:
+            raise gl.vm.UserError(f"{ERR_USER} Target arena does not exist")
+
+        progression = []
+        current_stage = int(self.arena_stages[arena_id])
+        for s in range(1, current_stage):
+            key = f"{arena_id}_{s}"
+            progression.append(json.loads(self.arena_history[key]))
+        progression.reverse()  # descending order (newest history entries first)
+
+        return {
+            "id": arena_id,
+            "topic": self.arena_topics[arena_id],
+            "proponent": self.arena_proponents[arena_id].as_hex,
+            "claim": self.arena_claims[arena_id],
+            "evidence_url": self.arena_evidence[arena_id],
+            "founder": self.arena_founders[arena_id].as_hex,
+            "progression_index": current_stage,
+            "defenses": int(self.arena_defenses[arena_id]),
+            "clashes": int(self.arena_clashes[arena_id]),
+            "progression": progression,
+        }
