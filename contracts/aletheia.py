@@ -18,6 +18,52 @@ MAX_LOG_SIZE = 150          # circular log limit
 MARGIN_TOLERANCE = 12       # consensus threshold for LLM margin variance
 
 
+def _clean(s, lo: int, hi: int, label: str) -> str:
+    s = str(s if s is not None else "").strip()
+    if not (lo <= len(s) <= hi):
+        raise gl.vm.UserError(f"{ERR_USER} {label} length must be between {lo} and {hi} characters")
+    return s
+
+
+def _normalize_verdict(raw) -> dict:
+    if isinstance(raw, str):
+        first, last = raw.find("{"), raw.rfind("}")
+        if first < 0 or last < 0:
+            raise gl.vm.UserError(f"{ERR_LLM} Response format is invalid (no JSON object found)")
+        try:
+            raw = json.loads(raw[first:last + 1])
+        except Exception as e:
+            raise gl.vm.UserError(f"{ERR_LLM} JSON decode error: {str(e)}")
+    if not isinstance(raw, dict):
+        raise gl.vm.UserError(f"{ERR_LLM} Verdict response is not a valid dictionary object")
+    
+    verdict = str(raw.get("verdict", "")).strip().upper()
+    if verdict not in ("DEFEND", "OVERTHROW"):
+        raise gl.vm.UserError(f"{ERR_LLM} Invalid verdict value received: {verdict!r}")
+        
+    try:
+        margin = max(0, min(100, int(round(float(str(raw.get("margin", 0)).strip())))))
+    except (ValueError, TypeError):
+        raise gl.vm.UserError(f"{ERR_LLM} Margin field is not a valid numeric integer")
+        
+    reasoning = str(raw.get("reasoning", raw.get("note", ""))).strip()[:300]
+    return {"verdict": verdict, "margin": margin, "reasoning": reasoning}
+
+
+def _handle_leader_error(leaders_res, leader_fn) -> bool:
+    leader_msg = getattr(leaders_res, "message", "")
+    try:
+        leader_fn()
+        return False
+    except gl.vm.UserError as e:
+        msg = getattr(e, "message", str(e))
+        if msg.startswith(ERR_USER) or msg.startswith(ERR_LLM):
+            return msg == leader_msg
+        return False
+    except Exception:
+        return False
+
+
 class Aletheia(gl.Contract):
     """
     Aletheia is a decentralized, evidence-grounded debate arena on GenLayer.
