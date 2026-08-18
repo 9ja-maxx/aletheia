@@ -195,3 +195,62 @@ JSON output structure:
 
         self.arena_ids.append(arena_id)
         return arena_id
+
+    @gl.public.write
+    def clash_thesis(self, arena_id: str, contender_claim: str, contender_evidence_url: str) -> None:
+        """
+        Challenges the current thesis of an arena with a new claim and evidence URL.
+        """
+        if arena_id not in self.arena_topics:
+            raise gl.vm.UserError(f"{ERR_USER} Target arena does not exist")
+        contender_claim = _clean(contender_claim, 10, MAX_CLAIM_LENGTH, "Contender claim")
+        contender_evidence_url = _clean(contender_evidence_url, 10, MAX_URL_LENGTH, "Contender evidence URL")
+
+        topic = self.arena_topics[arena_id]
+        thesis = self.arena_claims[arena_id]
+        thesis_url = self.arena_evidence[arena_id]
+        opponent = gl.message.sender_address
+
+        # Perform the non-deterministic duel
+        verdict = self._duel(topic, thesis, thesis_url, contender_claim, contender_evidence_url)
+
+        # Overthrow if category is OVERTHROW and margin satisfies a threshold
+        overthrown = verdict["verdict"] == "OVERTHROW" and verdict["margin"] >= 15
+
+        self.arena_clashes[arena_id] += u256(1)
+        self.total_debates += u256(1)
+
+        if overthrown:
+            stage = self.arena_stages[arena_id]
+            # Save the outgoing thesis to history
+            history_record = {
+                "proponent": self.arena_proponents[arena_id].as_hex,
+                "claim": thesis,
+                "evidence_url": thesis_url,
+                "defenses": int(self.arena_defenses[arena_id]),
+                "stage": int(stage),
+                "toppled_by": opponent.as_hex,
+                "margin": verdict["margin"]
+            }
+            self.arena_history[f"{arena_id}_{int(stage)}"] = json.dumps(history_record)
+
+            # Update current state to the challenger's claim
+            self.arena_proponents[arena_id] = opponent
+            self.arena_claims[arena_id] = contender_claim
+            self.arena_evidence[arena_id] = contender_evidence_url
+            self.arena_stages[arena_id] = stage + u256(1)
+            self.arena_defenses[arena_id] = u256(0)
+            self.total_overthrows += u256(1)
+        else:
+            self.arena_defenses[arena_id] += u256(1)
+
+        # Log event to the circular ledger
+        self._log({
+            "arena_id": arena_id,
+            "topic": topic,
+            "opponent": opponent.as_hex,
+            "result": "OVERTHROW" if overthrown else "DEFEND",
+            "margin": verdict["margin"],
+            "reasoning": verdict["reasoning"],
+            "proponent": self.arena_proponents[arena_id].as_hex
+        })
