@@ -12,25 +12,20 @@ Below is the architectural flow of Aletheia, showing how claims and evidence are
 
 ```mermaid
 graph TD
-    classDef challenger fill:#2d1a1a,stroke:#b91c1c,stroke-width:2px,color:#fca5a5;
-    classDef incumbent fill:#1e293b,stroke:#0ea5e9,stroke-width:2px,color:#bae6fd;
-    classDef validator fill:#1a2d1a,stroke:#16a34a,stroke-width:2px,color:#bbf7d0;
-    classDef contract fill:#2e1f47,stroke:#8b5cf6,stroke-width:2px,color:#ddd6fe;
-
     subgraph UserAction ["The Challenge Arena"]
-        Challenger["Contender (Antithesis Claim + Evidence URL)"]:::challenger
-        Incumbent["Proponent (Thesis Claim + Evidence URL)"]:::incumbent
+        Challenger["Contender - Counter Claim and Evidence URL"]
+        Incumbent["Proponent - Thesis Claim and Evidence URL"]
     end
 
     subgraph OnChainVM ["Aletheia GenVM Intelligent Contract"]
-        Crawler["Web Crawler: gl.nondet.web.get(url)"]:::contract
-        Arbiter["Dragon Arbiter LLM Adjudicator"]:::contract
-        Store["State Storage (Optimized TreeMap Mappings)"]:::contract
+        Crawler["Web Crawler - gl.nondet.web.get"]
+        Arbiter["Dragon Arbiter LLM Adjudicator"]
+        Store["State Storage - Optimized TreeMap Mappings"]
     end
 
     subgraph ConsensusJury ["Decentralized Validator Jury"]
-        Leader["Consensus Leader Node"]:::validator
-        Validators["Honest Validator Nodes"]:::validator
+        Leader["Consensus Leader Node"]
+        Validators["Honest Validator Nodes"]
     end
 
     Challenger -->|Submit clash_thesis| Leader
@@ -39,15 +34,25 @@ graph TD
     Leader -->|1. Triggers Web Fetching| Crawler
     Crawler -->|2. Pulls live evidence page text| Arbiter
     
-    Arbiter -->|3. Rules on categorical verdict & tight margin| Leader
-    Leader -->|4. Proposes block & outputs| Validators
+    Arbiter -->|3. Rules on categorical verdict and tight margin| Leader
+    Leader -->|4. Proposes block and outputs| Validators
     
-    Validators -->|5. Re-fetches web data & executes evaluation| Validators
-    Validators -->|6. Check verdict match & margin delta within 12 points| Leader
+    Validators -->|5. Re-fetches web data and executes evaluation| Validators
+    Validators -->|6. Check verdict match and margin delta within 12 points| Leader
     
     Leader -->|7. Writes result to state on consensus| Store
     Store -->|If Overthrown: Rotate Thesis Proponent| Store
     Store -->|Prune logs using O(1) circular queue| Store
+
+    classDef challenger fill:#2d1a1a,stroke:#b91c1c,stroke-width:2px,color:#fca5a5;
+    classDef incumbent fill:#1e293b,stroke:#0ea5e9,stroke-width:2px,color:#bae6fd;
+    classDef validator fill:#1a2d1a,stroke:#16a34a,stroke-width:2px,color:#bbf7d0;
+    classDef contract fill:#2e1f47,stroke:#8b5cf6,stroke-width:2px,color:#ddd6fe;
+
+    class Challenger challenger;
+    class Incumbent incumbent;
+    class Crawler,Arbiter,Store contract;
+    class Leader,Validators validator;
 ```
 
 ---
