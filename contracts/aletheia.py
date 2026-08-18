@@ -254,3 +254,15 @@ JSON output structure:
             "reasoning": verdict["reasoning"],
             "proponent": self.arena_proponents[arena_id].as_hex
         })
+
+    def _log(self, event: dict) -> None:
+        """
+        Pushes debate event details to a circular O(1) buffer.
+        """
+        payload = json.dumps(event)
+        # Using a circular buffer index mapping to self.total_debates
+        index = int(self.total_debates - 1) % MAX_LOG_SIZE
+        if len(self.ledger) < MAX_LOG_SIZE:
+            self.ledger.append(payload)
+        else:
+            self.ledger[index] = payload
