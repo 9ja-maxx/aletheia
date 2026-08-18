@@ -64,6 +64,22 @@ def _handle_leader_error(leaders_res, leader_fn) -> bool:
         return False
 
 
+def _fetch_web_evidence(url: str) -> str:
+    url = _clean(url, 10, MAX_URL_LENGTH, "Evidence URL")
+    if not (url.startswith("http://") or url.startswith("https://")):
+        raise gl.vm.UserError(f"{ERR_USER} URL must start with http:// or https://")
+    try:
+        html = gl.nondet.web.get(url)
+    except Exception as e:
+        raise gl.vm.UserError(f"{ERR_LLM} Web request failed for {url}: {str(e)}")
+    if not html:
+        return ""
+    text = str(html).strip()
+    if len(text) > MAX_EVIDENCE_LENGTH:
+        text = text[:MAX_EVIDENCE_LENGTH] + "... [TRUNCATED]"
+    return text
+
+
 class Aletheia(gl.Contract):
     """
     Aletheia is a decentralized, evidence-grounded debate arena on GenLayer.
