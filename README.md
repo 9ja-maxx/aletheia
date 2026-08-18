@@ -6,7 +6,7 @@ Aletheia is a decentralized dispute and debate terminal where users challenge cl
 
 ---
 
-## 🐉 The Dragon Coliseum flow
+## The Dragon Coliseum flow
 
 Below is the architectural flow of Aletheia, showing how claims and evidence are processed and verified:
 
@@ -43,7 +43,7 @@ graph TD
     Leader -->|4. Proposes block & outputs| Validators
     
     Validators -->|5. Re-fetches web data & executes evaluation| Validators
-    Validators -->|6. Check verdict match & margin delta <= 12| Leader
+    Validators -->|6. Check verdict match & margin delta within 12 points| Leader
     
     Leader -->|7. Writes result to state on consensus| Store
     Store -->|If Overthrown: Rotate Thesis Proponent| Store
