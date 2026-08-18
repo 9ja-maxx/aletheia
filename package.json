@@ -1,0 +1,20 @@
+{
+  "name": "aletheia-arena",
+  "version": "1.0.0",
+  "description": "Decentralized, evidence-grounded debate terminal on GenLayer",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run start"
+  },
+  "keywords": [
+    "genlayer",
+    "intelligent-contracts",
+    "blockchain",
+    "dialectics",
+    "adjudication"
+  ],
+  "author": "9ja_maxx",
+  "license": "MIT"
+}
