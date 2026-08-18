@@ -167,3 +167,31 @@ JSON output structure:
             return abs(a - b) <= MARGIN_TOLERANCE
 
         return gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
+
+    # ------------------------------------------------------------- writes
+
+    @gl.public.write
+    def propose_thesis(self, topic: str, opening_claim: str, evidence_url: str) -> str:
+        """
+        Creates a new debate arena with a specified topic, opening claim, and evidence URL.
+        """
+        topic = _clean(topic, 4, MAX_TOPIC_LENGTH, "Topic")
+        opening_claim = _clean(opening_claim, 10, MAX_CLAIM_LENGTH, "Opening claim")
+        evidence_url = _clean(evidence_url, 10, MAX_URL_LENGTH, "Evidence URL")
+
+        self.seq += u256(1)
+        arena_id = f"A{int(self.seq)}"
+        proponent = gl.message.sender_address
+
+        # Register individual properties to storage maps
+        self.arena_topics[arena_id] = topic
+        self.arena_proponents[arena_id] = proponent
+        self.arena_claims[arena_id] = opening_claim
+        self.arena_evidence[arena_id] = evidence_url
+        self.arena_defenses[arena_id] = u256(0)
+        self.arena_clashes[arena_id] = u256(0)
+        self.arena_founders[arena_id] = proponent
+        self.arena_stages[arena_id] = u256(1)
+
+        self.arena_ids.append(arena_id)
+        return arena_id
