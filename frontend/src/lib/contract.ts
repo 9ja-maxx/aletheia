@@ -1,9 +1,9 @@
 import { createClient } from 'genlayer-js';
 import { studionet } from 'genlayer-js/chains';
 
-// Aletheia contract address placeholder. To be updated upon deployment by 9ja_maxx.
+// Aletheia contract address — deployed on GenLayer StudioNet by 9ja_maxx.
 export const CONTRACT_ADDRESS =
-  'YOUR_DEPLOYED_CONTRACT_ADDRESS_HERE' as `0x${string}`;
+  '0x32758C384E6C85Ba76ab69bA3B7Ac91714D9053f' as `0x${string}`;
 export const DEPLOY_TX = '';
 
 export const EXPLORER = 'https://explorer-studio.genlayer.com';
